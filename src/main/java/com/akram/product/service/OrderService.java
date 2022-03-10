@@ -15,6 +15,7 @@ import com.akram.product.repo.OrderItemRepo;
 import com.akram.product.repo.OrderRepo;
 import com.akram.product.repo.ProductRepo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -49,8 +50,9 @@ public class OrderService {
             }
             orders.add(CustomerOrderDto.builder()
                     .customerName(currentOrder.getReferredCustomer().getName())
-                            .orderDetails(orderItemDtos)
-                            .totalPrice(currentOrder.getTotalPrice())
+                    .orderDetails(orderItemDtos)
+                    .totalPrice(currentOrder.getTotalPrice())
+                    .id(currentOrder.getId())
                     .build());
         }
 
@@ -66,7 +68,7 @@ public class OrderService {
             if (!validateProductBalance(product, orderDetail.getCount())) {
                 throw new ProductBalanceNotEnoughException(product.getName(), orderDetail.getCount());
             }
-            usedProductsCounts.put(product.getId(),orderDetail.getCount());
+            usedProductsCounts.put(product.getId(), orderDetail.getCount());
             dbOrderItems.add(OrderItem.builder()
                     .count(orderDetail.getCount())
                     .referredProduct(product)
@@ -76,7 +78,7 @@ public class OrderService {
         Customer customer = customerService.findByName(createOrderRequestDto.getCustomerName());
         if (totalPrice <= customer.getCreditLimit() - customer.getCurrentCredit()) {
             customerService.addCustomerCredit(customer, totalPrice);
-            for(var x : usedProductsCounts.entrySet()){
+            for (var x : usedProductsCounts.entrySet()) {
                 productService.deductBalance(x.getKey(), x.getValue());
             }
             Order order = Order.builder()
@@ -90,10 +92,15 @@ public class OrderService {
             orderRepo.save(order);
             return "Added";
         } else
-            throw new CustomerCreditNotEnoughException(customer.getName(), totalPrice,customer.getCurrentCredit());
+            throw new CustomerCreditNotEnoughException(customer.getName(), totalPrice, customer.getCurrentCredit());
     }
 
     private boolean validateProductBalance(Product product, Integer count) {
         return product.getBalance() >= count;
+    }
+
+    public String delete(Long id) {
+        orderRepo.delete(orderRepo.getById(id));
+        return "Deleted";
     }
 }

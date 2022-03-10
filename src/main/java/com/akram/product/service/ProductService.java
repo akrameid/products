@@ -3,6 +3,7 @@ package com.akram.product.service;
 import com.akram.product.dto.product.ProductDto;
 import com.akram.product.exception.ProductIdNotFoundException;
 import com.akram.product.exception.ProductNameFoundException;
+import com.akram.product.exception.ProductNameNotFoundException;
 import com.akram.product.model.Product;
 import com.akram.product.repo.ProductRepo;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,21 +32,26 @@ public class ProductService {
     }
 
     public String addProduct(ProductDto productDto) {
-        getByName(productDto.getName());
+        try {
+            getByName(productDto.getName());
+            throw new ProductNameFoundException(productDto.getName());
+        } catch (ProductNameNotFoundException ex) {
 
-        Product product = Product.builder()
-                .name(productDto.getName())
-                .price(productDto.getPrice())
-                .balance(productDto.getBalance())
-                .build();
-        product = productRepo.save(product);
-        return "Product added successfully with id " + product.getId();
+
+            Product product = Product.builder()
+                    .name(productDto.getName())
+                    .price(productDto.getPrice())
+                    .balance(productDto.getBalance())
+                    .build();
+            product = productRepo.save(product);
+            return "Product added successfully with id " + product.getId();
+        }
     }
 
     Product getByName(String name) {
         Optional<Product> product = productRepo.findByName(name);
-        if (product.isPresent())
-            throw new ProductNameFoundException(name);
+        if (product.isPresent() == false)
+            throw new ProductNameNotFoundException(name);
         return product.get();
     }
 

@@ -13,6 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 @Builder(toBuilder = true)
 public class CustomerOrderDto {
+    private Long id;
     private String customerName;
     private Long totalPrice;
     private List<OrderItemDto> orderDetails;

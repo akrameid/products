@@ -70,9 +70,9 @@ public class ValidationHandler extends ResponseEntityExceptionHandler {
 
 
     @ResponseBody
-    @ExceptionHandler(ProductNameFoundException.class)
+    @ExceptionHandler(ProductNameNotFoundException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    String productNameFoundException(ProductNameFoundException ex) {
+    String productNameFoundException(ProductNameNotFoundException ex) {
         return ex.getMessage();
     }
 

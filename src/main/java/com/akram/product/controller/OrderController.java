@@ -26,4 +26,9 @@ public class OrderController {
     ResponseEntity<String> createOrder(@Valid @RequestBody CreateOrderRequestDto createOrderRequestDto) {
         return new ResponseEntity<String>(service.createOrder(createOrderRequestDto), HttpStatus.CREATED);
     }
+
+    @DeleteMapping("/{id}")
+    ResponseEntity<String> delete(@PathVariable Long id){
+        return new ResponseEntity<String>(service.delete(id),HttpStatus.OK);
+    }
 }
