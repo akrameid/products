@@ -1,62 +1,99 @@
 package com.akram.product.service;
 
-import com.akram.product.dto.CustomerOrder;
-import com.akram.product.dto.createorder.OrderItem;
-import com.akram.product.dto.createorder.Request;
-import com.akram.product.dto.createorder.Response;
+import com.akram.product.dto.CustomerOrderDto;
+import com.akram.product.dto.order.OrderItemDto;
+import com.akram.product.dto.order.CreateOrderRequestDto;
+import com.akram.product.exception.CustomerCreditNotEnoughException;
+import com.akram.product.exception.ProductBalanceNotEnoughException;
+import com.akram.product.exception.ProductIdNotFoundException;
+import com.akram.product.model.Customer;
 import com.akram.product.model.Order;
+import com.akram.product.model.OrderItem;
 import com.akram.product.model.Product;
 import com.akram.product.repo.CustomerRepo;
+import com.akram.product.repo.OrderItemRepo;
 import com.akram.product.repo.OrderRepo;
 import com.akram.product.repo.ProductRepo;
-import org.aspectj.weaver.ast.Or;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class OrderService {
 
     @Autowired
     private OrderRepo orderRepo;
+    @Autowired
+    private OrderItemRepo orderItemRepo;
 
     @Autowired
-    private CustomerRepo customerRepo;
+    private CustomerService customerService;
 
     @Autowired
-    private ProductRepo productRepo;
+    private ProductService productService;
 
 
-    public List<CustomerOrder> getAll() {
-        List<CustomerOrder> orders = new ArrayList<>();
-        List<Order>allOrders = orderRepo.findAll();
+    public List<CustomerOrderDto> getAll() {
+        List<CustomerOrderDto> orders = new ArrayList<>();
+        List<Order> allOrders = orderRepo.findAll();
         for (Order currentOrder : allOrders) {
-            orders.add(CustomerOrder.builder()
-                            .customerName(currentOrder.getCustomer().getName())
+            List<OrderItemDto> orderItemDtos = new ArrayList<>();
+            for (OrderItem orderItem : currentOrder.getCurrentOrderItems()) {
+                orderItemDtos.add(OrderItemDto.builder()
+                        .productId(orderItem.getReferredProduct().getId())
+                        .productName(orderItem.getReferredProduct().getName())
+                        .productPrice(orderItem.getReferredProduct().getPrice())
+                        .count(orderItem.getCount())
+                        .build());
+            }
+            orders.add(CustomerOrderDto.builder()
+                    .customerName(currentOrder.getReferredCustomer().getName())
+                            .orderDetails(orderItemDtos)
+                            .totalPrice(currentOrder.getTotalPrice())
                     .build());
         }
 
         return orders;
     }
 
-    public Response createOrder(Request request) {
-        List<com.akram.product.model.OrderItem> dbOrderItems = new ArrayList<>();
-        for (OrderItem orderDetail : request.getOrderDetails()) {
-            Optional<Product> product = productRepo.findById(orderDetail.getProductId());
-            product.ifPresent(value -> dbOrderItems.add(com.akram.product.model.OrderItem.builder()
+    public String createOrder(CreateOrderRequestDto createOrderRequestDto) {
+        List<OrderItem> dbOrderItems = new ArrayList<>();
+        long totalPrice = 0;
+        Map<Long, Integer> usedProductsCounts = new HashMap<>();
+        for (OrderItemDto orderDetail : createOrderRequestDto.getOrderDetails()) {
+            Product product = productService.getByName(orderDetail.getProductName());
+            if (!validateProductBalance(product, orderDetail.getCount())) {
+                throw new ProductBalanceNotEnoughException(product.getName(), orderDetail.getCount());
+            }
+            usedProductsCounts.put(product.getId(),orderDetail.getCount());
+            dbOrderItems.add(OrderItem.builder()
                     .count(orderDetail.getCount())
-                    .product(value)
-                    .build()));
+                    .referredProduct(product)
+                    .build());
+            totalPrice += product.getPrice() * orderDetail.getCount();
         }
+        Customer customer = customerService.findByName(createOrderRequestDto.getCustomerName());
+        if (totalPrice <= customer.getCreditLimit() - customer.getCurrentCredit()) {
+            customerService.addCustomerCredit(customer, totalPrice);
+            for(var x : usedProductsCounts.entrySet()){
+                productService.deductBalance(x.getKey(), x.getValue());
+            }
+            Order order = Order.builder()
+                    .referredCustomer(customer)
+                    .currentOrderItems(new ArrayList<>())
+                    .totalPrice(totalPrice)
+                    .build();
+            for (OrderItem x : dbOrderItems) {
+                order.addOrderItem(x);
+            }
+            orderRepo.save(order);
+            return "Added";
+        } else
+            throw new CustomerCreditNotEnoughException(customer.getName(), totalPrice,customer.getCurrentCredit());
+    }
 
-        Order order = Order.builder()
-                .customer(customerRepo.findByName(request.getCustomerName()))
-                .orderItems(dbOrderItems)
-                .build();
-        orderRepo.save(order);
-        return new Response("Added");
+    private boolean validateProductBalance(Product product, Integer count) {
+        return product.getBalance() >= count;
     }
 }

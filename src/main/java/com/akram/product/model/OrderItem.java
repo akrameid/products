@@ -16,15 +16,15 @@ public class OrderItem {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "product_id")
 //    @RestResource(path = "libraryAddress", rel="address")
-    private Product product;
+    private Product referredProduct;
 
     @Column(name = "count")
     private Integer count;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="order_id")
-    private Order order;
+    private Order referredOrder;
 }

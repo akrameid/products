@@ -3,6 +3,8 @@ package com.akram.product.model;
 import lombok.*;
 
 import javax.persistence.*;
+import java.util.List;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -17,8 +19,10 @@ public class Product {
     @Column(name = "name")
     private String name;
     @Column(name = "price")
-    private Integer price;
+    private Long price;
+    @Column(name = "balance")
+    private Integer balance;
 
-    @OneToOne(mappedBy = "product")
-    private OrderItem orderItem;
+    @OneToMany(mappedBy = "referredProduct",cascade = CascadeType.ALL)
+    private List<OrderItem> orderItem;
 }

@@ -19,10 +19,10 @@ public class Database {
     CommandLineRunner init(CustomerRepo repository, ProductRepo productRepo) {
 
         return args -> {
-            log.info("Preloading " + productRepo
-                    .save(Product.builder().id(1).name("Product_1").price(10).build()));
-            log.info("Preloading " + repository
-                    .save(Customer.builder().id(1).name("Akram").build()));
+//            log.info("Preloading " + productRepo
+//                    .save(Product.builder().id(1).name("Product_1").price(10L).build()));
+//            log.info("Preloading " + repository
+//                    .save(Customer.builder().id(1).name("Akram").build()));
         };
     }
 }

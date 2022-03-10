@@ -1,4 +1,4 @@
-package com.akram.product.dto.createorder;
+package com.akram.product.dto.order;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,7 +9,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Request {
+public class CreateOrderRequestDto {
     private String customerName;
-    private List<OrderItem> orderDetails;
+    private List<OrderItemDto> orderDetails;
 }

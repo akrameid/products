@@ -1,8 +1,7 @@
 package com.akram.product.controller;
 
-import com.akram.product.dto.CustomerOrder;
-import com.akram.product.dto.createorder.Request;
-import com.akram.product.dto.createorder.Response;
+import com.akram.product.dto.CustomerOrderDto;
+import com.akram.product.dto.order.CreateOrderRequestDto;
 import com.akram.product.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -20,20 +19,11 @@ public class OrderController {
     @Autowired
     private OrderService service;
     @GetMapping()
-    ResponseEntity<List<CustomerOrder>> getAllOrders() {
-        return new ResponseEntity<List<CustomerOrder>>(service.getAll(), HttpStatus.OK);
+    ResponseEntity<List<CustomerOrderDto>> getAllOrders() {
+        return new ResponseEntity<List<CustomerOrderDto>>(service.getAll(), HttpStatus.OK);
     }
-//
-//    @Operation(
-//            summary = "Create RIG", description = "Create RIG", tags = {"RIGs"}
-//            , responses =
-//            {
-//                    @ApiResponse(description = "Success", responseCode = "201",
-//                            content = @Content(mediaType = "application/json",schema = @Schema(implementation = RigDto.class))
-//                    )}
-//    )
-    @PostMapping("/create")
-    ResponseEntity<Response> addRig(@Valid @RequestBody Request request) {
-        return new ResponseEntity<Response>(service.createOrder(request), HttpStatus.CREATED);
+    @PostMapping()
+    ResponseEntity<String> createOrder(@Valid @RequestBody CreateOrderRequestDto createOrderRequestDto) {
+        return new ResponseEntity<String>(service.createOrder(createOrderRequestDto), HttpStatus.CREATED);
     }
 }
