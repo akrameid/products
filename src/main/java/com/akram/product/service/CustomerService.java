@@ -67,4 +67,9 @@ public class CustomerService {
         customer.setCurrentCredit(customer.getCurrentCredit()+totalPrice);
         customerRepo.save(customer);
     }
+
+    void adjustCredit(Customer customer, Long totalPrice) {
+        customer.setCurrentCredit(customer.getCurrentCredit()-totalPrice);
+        customerRepo.save(customer);
+    }
 }

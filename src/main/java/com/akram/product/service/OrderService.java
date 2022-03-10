@@ -2,20 +2,16 @@ package com.akram.product.service;
 
 import com.akram.product.dto.CustomerOrderDto;
 import com.akram.product.dto.order.OrderItemDto;
-import com.akram.product.dto.order.CreateOrderRequestDto;
+import com.akram.product.dto.order.NewOrderRequestDto;
 import com.akram.product.exception.CustomerCreditNotEnoughException;
 import com.akram.product.exception.ProductBalanceNotEnoughException;
-import com.akram.product.exception.ProductIdNotFoundException;
 import com.akram.product.model.Customer;
 import com.akram.product.model.Order;
 import com.akram.product.model.OrderItem;
 import com.akram.product.model.Product;
-import com.akram.product.repo.CustomerRepo;
 import com.akram.product.repo.OrderItemRepo;
 import com.akram.product.repo.OrderRepo;
-import com.akram.product.repo.ProductRepo;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -59,11 +55,11 @@ public class OrderService {
         return orders;
     }
 
-    public String createOrder(CreateOrderRequestDto createOrderRequestDto) {
+    public String createOrder(NewOrderRequestDto newOrderRequestDto) {
         List<OrderItem> dbOrderItems = new ArrayList<>();
         long totalPrice = 0;
         Map<Long, Integer> usedProductsCounts = new HashMap<>();
-        for (OrderItemDto orderDetail : createOrderRequestDto.getOrderDetails()) {
+        for (OrderItemDto orderDetail : newOrderRequestDto.getOrderDetails()) {
             Product product = productService.getByName(orderDetail.getProductName());
             if (!validateProductBalance(product, orderDetail.getCount())) {
                 throw new ProductBalanceNotEnoughException(product.getName(), orderDetail.getCount());
@@ -75,7 +71,7 @@ public class OrderService {
                     .build());
             totalPrice += product.getPrice() * orderDetail.getCount();
         }
-        Customer customer = customerService.findByName(createOrderRequestDto.getCustomerName());
+        Customer customer = customerService.findByName(newOrderRequestDto.getCustomerName());
         if (totalPrice <= customer.getCreditLimit() - customer.getCurrentCredit()) {
             customerService.addCustomerCredit(customer, totalPrice);
             for (var x : usedProductsCounts.entrySet()) {
@@ -100,7 +96,18 @@ public class OrderService {
     }
 
     public String delete(Long id) {
-        orderRepo.delete(orderRepo.getById(id));
+        Order order = orderRepo.getById(id);
+        customerService.adjustCredit(order.getReferredCustomer(), order.getTotalPrice());
+        for(OrderItem orderItem:order.getCurrentOrderItems()){
+            productService.adjustBalance(orderItem.getReferredProduct(), orderItem.getCount());
+        }
+        orderRepo.delete(order);
         return "Deleted";
+    }
+
+    public String update(Long id, NewOrderRequestDto newOrderRequestDto) {
+        createOrder(newOrderRequestDto);
+        delete(id);
+        return "Updated";
     }
 }

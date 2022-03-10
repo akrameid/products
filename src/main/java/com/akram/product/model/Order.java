@@ -17,7 +17,9 @@ import static javax.persistence.FetchType.LAZY;
 @Builder(toBuilder = true)
 public class Order {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE
+    )
+    @Setter(AccessLevel.PRIVATE)
     private long id;
     @Column(name = "name")
     private String name;

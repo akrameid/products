@@ -80,4 +80,9 @@ public class ProductService {
         product.setBalance(product.getBalance() - count);
         productRepo.save(product);
     }
+
+    void adjustBalance(Product product, Integer count) {
+        product.setBalance(product.getBalance()+count);
+        productRepo.save(product);
+    }
 }
