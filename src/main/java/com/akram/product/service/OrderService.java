@@ -9,7 +9,6 @@ import com.akram.product.model.Customer;
 import com.akram.product.model.Order;
 import com.akram.product.model.OrderItem;
 import com.akram.product.model.Product;
-import com.akram.product.repo.OrderItemRepo;
 import com.akram.product.repo.OrderRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,8 +20,6 @@ public class OrderService {
 
     @Autowired
     private OrderRepo orderRepo;
-    @Autowired
-    private OrderItemRepo orderItemRepo;
 
     @Autowired
     private CustomerService customerService;

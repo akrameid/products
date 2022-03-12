@@ -5,8 +5,6 @@ import lombok.*;
 import javax.persistence.*;
 import java.util.List;
 
-import static javax.persistence.FetchType.LAZY;
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -27,6 +25,8 @@ public class Customer {
     @Column(name = "currentCredit")
     private Long currentCredit;
 
-    @OneToMany(mappedBy = "referredCustomer", fetch = LAZY,cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "referredCustomer",
+            cascade = CascadeType.ALL)
+//    @OneToMany(mappedBy = "referredCustomer", fetch = LAZY,cascade = CascadeType.ALL)
     private List<Order> orders;
 }

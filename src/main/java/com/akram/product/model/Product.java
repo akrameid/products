@@ -23,6 +23,7 @@ public class Product {
     @Column(name = "balance")
     private Integer balance;
 
-    @OneToMany(mappedBy = "referredProduct",cascade = CascadeType.ALL)
+
+    @OneToMany(mappedBy = "referredProduct",cascade = CascadeType.ALL, fetch= FetchType.EAGER)
     private List<OrderItem> orderItem;
 }
