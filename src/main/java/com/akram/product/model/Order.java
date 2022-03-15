@@ -3,7 +3,6 @@ package com.akram.product.model;
 import lombok.*;
 
 import javax.persistence.*;
-import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -19,9 +18,9 @@ public class Order {
     @Setter(AccessLevel.PRIVATE)
     private long id;
 
-//    @ManyToOne(fetch = LAZY)
+    //    @ManyToOne(fetch = LAZY)
 //    @JoinColumn(name = "customer_id")
-    @ManyToOne( fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "customer_id")
     private Customer referredCustomer;
 
@@ -29,8 +28,8 @@ public class Order {
     private Long totalPrice;
 
     //    @OneToMany(cascade = CascadeType.ALL)
-    @OneToMany(mappedBy = "referredOrder",cascade = CascadeType.ALL)
-    private List<OrderItem> currentOrderItems = new ArrayList<OrderItem>();
+    @OneToMany(mappedBy = "referredOrder", cascade = CascadeType.ALL)
+    private List<OrderItem> currentOrderItems;
 
     public void addOrderItem(OrderItem orderItem) {
         currentOrderItems.add(orderItem);

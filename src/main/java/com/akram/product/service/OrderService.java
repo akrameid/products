@@ -9,10 +9,12 @@ import com.akram.product.model.Customer;
 import com.akram.product.model.Order;
 import com.akram.product.model.OrderItem;
 import com.akram.product.model.Product;
+import com.akram.product.repo.OrderItemRepo;
 import com.akram.product.repo.OrderRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.util.*;
 
 @Service
@@ -21,6 +23,8 @@ public class OrderService {
     @Autowired
     private OrderRepo orderRepo;
 
+    @Autowired
+    private OrderItemRepo orderItemRepo;
     @Autowired
     private CustomerService customerService;
 
@@ -92,14 +96,27 @@ public class OrderService {
         return product.getBalance() >= count;
     }
 
+    @Transactional
     public String delete(Long id) {
         Order order = orderRepo.getById(id);
+
         customerService.adjustCredit(order.getReferredCustomer(), order.getTotalPrice());
-        for(OrderItem orderItem:order.getCurrentOrderItems()){
+        List<OrderItem> currentOrderItems = order.getCurrentOrderItems();
+        for (OrderItem orderItem : currentOrderItems) {
             productService.adjustBalance(orderItem.getReferredProduct(), orderItem.getCount());
+            orderItem.setReferredOrder(null);
+            orderItem.setReferredProduct(null);
+            orderItemRepo.save(orderItem);
+        }
+        currentOrderItems = order.getCurrentOrderItems();
+        order.setCurrentOrderItems(null);
+        for(OrderItem orderItem : currentOrderItems) {
+            orderItemRepo.delete(orderItem);
         }
         orderRepo.delete(order);
+//            orderRepo.deleteAll();
         return "Deleted";
+
     }
 
     public String update(Long id, NewOrderRequestDto newOrderRequestDto) {
